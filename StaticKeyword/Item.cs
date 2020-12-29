@@ -7,6 +7,6 @@ namespace StaticKeyword
     public class Item
     {
         public int id{ get; set; }
-        public string Name{ get; set; }
+        public string ProductName{ get; set; }
     }
 }

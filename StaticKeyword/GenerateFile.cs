@@ -11,30 +11,9 @@ namespace StaticKeyword
 
         public static Type[] GetTypesInNamespace(Assembly assembly, string nameSpace)
         {
-            var x = assembly.GetTypes()
+            return assembly.GetTypes()
                       .Where(t => String.Equals(t.Namespace, nameSpace, StringComparison.Ordinal))
                       .ToArray();
-
-            //for (int i = 0; i < x.Length; i++)
-            //{
-            //  //  x[i].DeclaringType
-            //    PropertyInfo[] myPropertyInfo;
-            //    // Get the properties of 'Type' class object.
-
-            //    //Type T = x[i].BaseType;
-            //    myPropertyInfo = T.GetType().GetProperties();
-            //    Console.WriteLine("Properties of System.Type are:");
-            //    for (int j = 0; j < myPropertyInfo.Length; j++)
-            //    {
-            //        Console.WriteLine(myPropertyInfo[i].ToString());
-            //    }
-
-            //    Console.WriteLine(x[i].Name);
-            //}
-
-
-
-            return x;
 
         }
     }

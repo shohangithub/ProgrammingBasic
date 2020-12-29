@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -9,149 +10,172 @@ namespace StaticKeyword
     {
         static void Main(string[] args)
         {
-            //void AllFileList()
-            //{
-            //    Type[] typelist = GenerateFile.GetTypesInNamespace(Assembly.GetExecutingAssembly(), "StaticKeyword");
-            //    for (int i = 0; i < typelist.Length; i++)
-            //    {
-
-            //        Console.WriteLine(typelist[i].Name);
-            //    }
-            //}
-            //Console.WriteLine("Hello");
-            //AllFileList();
+            string fileString = "function FunctionName(defaultData){\n";
 
             Type[] typelist = GenerateFile.GetTypesInNamespace(Assembly.GetExecutingAssembly(), "StaticKeyword");
-            //for (int i = 0; i < typelist.Length; i++)
-            //{
-
-            //    Console.WriteLine();
-            //}
-            //Type t = typeof(typelist.[1]);
-            // Get the public properties.
-            PropertyInfo[] propInfos = typelist[1].GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            Console.WriteLine("The number of public properties: {0}.\n",
-                              propInfos.Length);
-            // Display the public properties.
-            DisplayPropertyInfo(propInfos);
-
-            // Get the nonpublic properties.
-            PropertyInfo[] propInfos1 = typelist[1].GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
-            Console.WriteLine("The number of non-public properties: {0}.\n",
-                              propInfos1.Length);
-            // Display all the nonpublic properties.
-            DisplayPropertyInfo(propInfos1);
-
-
-
-            // The example displays the following output:
-            //       The number of public properties: 2.
-            //
-            //          Property name: Property1
-            //          Property type: System.String
-            //          Read-Write:    False
-            //          Visibility:    Public
-            //
-            //          Property name: Property2
-            //          Property type: System.String
-            //          Read-Write:    False
-            //          Visibility:    Public
-            //
-            //       The number of non-public properties: 4.
-            //
-            //          Property name: Property3
-            //          Property type: System.String
-            //          Read-Write:    False
-            //          Visibility:    Protected
-            //
-            //          Property name: Property4
-            //          Property type: System.Int32
-            //          Read-Write:    False
-            //          Visibility:    Private
-            //
-            //          Property name: Property5
-            //          Property type: System.String
-            //          Read-Write:    False
-            //          Visibility:    Internal/Friend
-            //
-            //          Property name: Property6
-            //          Property type: System.String
-            //          Read-Write:    False
-            //          Visibility:    Protected Internal/Friend
-        }
-    public static void DisplayPropertyInfo(PropertyInfo[] propInfos)
-    {
-        // Display information for all properties.
-        foreach (var propInfo in propInfos)
-        {
-            bool readable = propInfo.CanRead;
-            bool writable = propInfo.CanWrite;
-
-            Console.WriteLine("   Property name: {0}", propInfo.Name);
-            Console.WriteLine("   Property type: {0}", propInfo.PropertyType);
-            Console.WriteLine("   Read-Write:    {0}", readable & writable);
-            if (readable)
+            foreach (var type in typelist)
             {
-                MethodInfo getAccessor = propInfo.GetMethod;
-                Console.WriteLine("   Visibility:    {0}",
-                                  GetVisibility(getAccessor));
+                // Get the public properties.
+                PropertyInfo[] propInfos = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+              
+                //DisplayPropertyInfo(propInfos);
+
+                
+                fileString += WritePropertyInfo(propInfos);
             }
-            if (writable)
+
+            fileString += "}";
+            // now create a js file
+            CreateFile(fileString);
+        }
+
+        public static string WritePropertyInfo(PropertyInfo[] propInfos)
+        {
+            string body = "";
+            // Display information for all properties.
+            foreach (var propInfo in propInfos)
             {
-                MethodInfo setAccessor = propInfo.SetMethod;
-                Console.WriteLine("   Visibility:    {0}",
-                                  GetVisibility(setAccessor));
+                var defaultValue = SetDefaultValue(propInfo.PropertyType);
+                body += $"this.{ConvertToCamelCase(propInfo.Name)} : defaultData.{propInfo.Name} | {defaultValue};\n";
             }
-            Console.WriteLine();
+            return body;
         }
-    }
 
-    public static String GetVisibility(MethodInfo accessor)
-    {
-        if (accessor.IsPublic)
-            return "Public";
-        else if (accessor.IsPrivate)
-            return "Private";
-        else if (accessor.IsFamily)
-            return "Protected";
-        else if (accessor.IsAssembly)
-            return "Internal/Friend";
-        else
-            return "Protected Internal/Friend";
-    }
-
-    public class PropertyClass
-    {
-        public String Property1
+        public static void CreateFile(string body)
         {
-            get { return "hello"; }
-        }
+            string path = @"F:\ClassName.js";
 
-        public String Property2
+            try
+            {
+
+                WriteFile(path, body);
+                ReadFile(path);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public static void WriteFile(string path,string body)
         {
-            get { return "hello"; }
-        }
+            try
+            {
 
-        protected String Property3
+
+                // Create the file, or overwrite if the file exists.
+                using (FileStream fs = File.Create(path, 1024))
+                {
+                    byte[] info = new UTF8Encoding(true).GetBytes(body);
+                    // Add some information to the file.
+                    fs.Write(info, 0, info.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public static void ReadFile(string path)
         {
-            get { return "hello"; }
+            try
+            {
+
+                // Open the stream and read it back.
+                using (StreamReader sr = File.OpenText(path))
+                {
+                    string s = "";
+                    while ((s = sr.ReadLine()) != null)
+                    {
+                        Console.WriteLine(s);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
-        private Int32 Property4
+     
+
+
+
+
+        public static void DisplayPropertyInfo(PropertyInfo[] propInfos)
         {
-            get { return 32; }
+            // Display information for all properties.
+            foreach (var propInfo in propInfos)
+            {
+                bool readable = propInfo.CanRead;
+                bool writable = propInfo.CanWrite;
+
+                Console.WriteLine(" Property name: {0}", propInfo.Name);
+                Console.WriteLine(" Property type: {0}", propInfo.PropertyType);
+                Console.WriteLine(" Read-Write:    {0}", readable & writable);
+                if (readable)
+                {
+                    MethodInfo getAccessor = propInfo.GetMethod;
+                    Console.WriteLine("   Visibility:    {0}", GetVisibility(getAccessor));
+                }
+                if (writable)
+                {
+                    MethodInfo setAccessor = propInfo.SetMethod;
+                    Console.WriteLine("   Visibility:    {0}", GetVisibility(setAccessor));
+                }
+                Console.WriteLine();
+            }
         }
 
-        internal String Property5
+        public static string ConvertToCamelCase(string str)
         {
-            get { return "value"; }
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (i == 0)
+                    result = result.Append(Char.ToLower(str[i]));
+                else
+                    result = result.Append(str[i]);
+            }
+            return result.ToString();
         }
 
-        protected internal String Property6
+        public static string SetDefaultValue(Type type)
         {
-            get { return "value"; }
-        }
-    }
 
+            string result = null;
+
+            switch (type.Name)
+            {
+                case "Int16":
+                    result = "0";
+                    break;
+                case "Int32":
+                    result = "0";
+                    break;
+                case "Int64":
+                    result = "0";
+                    break;
+                default:
+                    result = "null";
+                    break;
+            }
+            
+            return result;
+        }
+      
+
+        public static String GetVisibility(MethodInfo accessor)
+        {
+            if (accessor.IsPublic)
+                return "Public";
+            else if (accessor.IsPrivate)
+                return "Private";
+            else if (accessor.IsFamily)
+                return "Protected";
+            else if (accessor.IsAssembly)
+                return "Internal/Friend";
+            else
+                return "Protected Internal/Friend";
+        }
 }
 }
