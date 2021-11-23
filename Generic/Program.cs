@@ -17,6 +17,8 @@ namespace Generic
                 System.Console.Write(i + " ");
             }
             System.Console.WriteLine("\nDone");
+
+            YieldKeyword.Consumer();
         }
     }
 }
